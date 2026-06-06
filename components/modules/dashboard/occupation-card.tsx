@@ -32,7 +32,7 @@ export function OccupationCard({ secretaria, autorizadas, ocupadas }: Occupation
       <div className="flex justify-between text-xs text-slate-500">
         <span>{pct.toFixed(0)}% ocupado</span>
         <span className={disponíveis === 0 ? "text-alert-red font-medium" : "text-green-600"}>
-          {disponíveis} disponível{disponíveis !== 1 ? "is" : ""}
+          {disponíveis} disponíve{disponíveis !== 1 ? "is" : "l"}
         </span>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatCPF, secretariaLabel } from "@/lib/utils";
-import { Copy, CheckCircle, Loader2 } from "lucide-react";
+import { Copy, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
 import { criarEstagiario, ativarEstagiario } from "@/actions/estagiarios";
 import { useRouter } from "next/navigation";
 
@@ -34,10 +34,7 @@ interface WizardData {
   supervisorCargo?: string;
   supervisorFormacao?: string;
   supervisorRamal?: string;
-  nomeProjeto?: string;
-  justificativaProjeto?: string;
-  escopoProjeto?: string;
-  cronogramaProjeto?: string;
+  supervisorEmail?: string;
 }
 
 interface StepRevisaoProps {
@@ -46,48 +43,19 @@ interface StepRevisaoProps {
 }
 
 function gerarEmailCide(data: WizardData): string {
-  const nivel = data.nivel === "MEDIO" ? "nível médio" : "nível superior";
-  const tipoVaga = data.tipoVaga === "NOVA" ? "nova vaga" : "substituição";
-
   return `Assunto: Contratação de Estagiário – ${data.vagaCodigo} / ${secretariaLabel(data.secretaria)}
 
-Prezados(as),
+Prezados,
 
-Solicito a contratação do(a) estagiário(a) abaixo relacionado(a), conforme dados:
+Solicitamos a contratação do(a) estudante ${data.nome} com a data prevista para início no dia xx/xx/xxxx.
+e-mail do(a) supervisor(a): ${data.supervisorEmail ?? ""}
 
-ESTAGIÁRIO(A):
-  Nome: ${data.nome}
-  CPF: ${formatCPF(data.cpf)}
-  Nível: ${nivel.toUpperCase()}
-  Curso: ${data.curso}
-  Instituição: ${data.instituicaoEnsino}
-  Horário: ${data.horario}
+Segue em anexo o currículo e o formulário da solicitação.
 
-VAGA:
-  Código: ${data.vagaCodigo}
-  Secretaria: ${secretariaLabel(data.secretaria)}
-  Tipo: ${tipoVaga}${data.estagiarioSubstituidoNome ? `\n  Substitui: ${data.estagiarioSubstituidoNome}` : ""}
-
-CONTRATO:
-  Início: ${formatDate(data.dataInicio)}
-  Fim previsto: ${formatDate(data.dataFim)}
-  Limite do contrato: ${formatDate(data.dataLimiteContrato)}
-
-LOTAÇÃO:
-  Unidade: ${data.lotacao}
-  Unidade Gestora: ${data.unidadeGestora}${data.secretariaInterna ? `\n  Secretaria interna: ${data.secretariaInterna}` : ""}
-
-SUPERVISOR(A):
-  Nome: ${data.supervisorNome}${data.supervisorCargo ? `\n  Cargo: ${data.supervisorCargo}` : ""}${data.supervisorRamal ? `\n  Ramal: ${data.supervisorRamal}` : ""}
-${data.nomeProjeto ? `
-PROJETO (ESTAGIDATA):
-  Nome: ${data.nomeProjeto}
-  Justificativa: ${data.justificativaProjeto}
-  Escopo: ${data.escopoProjeto}
-  Cronograma: ${data.cronogramaProjeto}
-` : ""}
-Att.,
-SUSEL — Tribunal de Contas do Distrito Federal`;
+Atenciosamente,
+Supervisão de Seleção e Gestão de Estágios - SUSEL
+Secretaria de Gestão de Pessoas - SEGEP
+Tribunal de Contas do Distrito Federal - TCDF`;
 }
 
 function ResumoItem({ label, value }: { label: string; value?: string | null }) {
@@ -171,13 +139,6 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Supervisor</p>
         <ResumoItem label="Nome" value={data.supervisorNome} />
         <ResumoItem label="Cargo" value={data.supervisorCargo} />
-
-        {data.nomeProjeto && (
-          <>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Projeto ESTAGIDATA</p>
-            <ResumoItem label="Projeto" value={data.nomeProjeto} />
-          </>
-        )}
       </div>
 
       {/* Botão salvar ou email */}
@@ -221,10 +182,18 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
             <textarea
               value={emailText}
               onChange={(e) => setEmailText(e.target.value)}
-              rows={18}
+              rows={12}
               className="w-full px-4 py-3 text-xs font-mono text-slate-700 focus:outline-none resize-none"
               spellCheck={false}
             />
+          </div>
+
+          {/* Aviso de anexos */}
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800">
+              <strong>Lembre-se de anexar</strong> o currículo do(a) estagiário(a) e o formulário da solicitação antes de enviar o e-mail.
+            </p>
           </div>
 
           <div className="flex justify-between">
@@ -238,7 +207,7 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
               {ativando ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Ativando...</>
               ) : (
-                <><CheckCircle className="w-4 h-4" /> Marcar como CONTRATAÇÃO FINALIZADA</>
+                <><CheckCircle className="w-4 h-4" /> Contratação enviada ao Agente Integrador</>
               )}
             </Button>
           </div>

@@ -4,9 +4,7 @@ import { useState } from "react";
 import { StepVaga } from "./step-vaga";
 import { StepEstagiario } from "./step-estagiario";
 import { StepSupervisor } from "./step-supervisor";
-import { StepProjeto } from "./step-projeto";
 import { StepRevisao } from "./step-revisao";
-import { secretariaLabel } from "@/lib/utils";
 import { Check } from "lucide-react";
 
 type VagaDisponivel = { id: string; codigo: string; secretaria: string };
@@ -44,19 +42,10 @@ type WizardState = {
   supervisorCargo?: string;
   supervisorFormacao?: string;
   supervisorRamal?: string;
-  // step 4
-  nomeProjeto?: string;
-  justificativaProjeto?: string;
-  escopoProjeto?: string;
-  cronogramaProjeto?: string;
+  supervisorEmail?: string;
 };
 
 const STEP_LABELS = ["Vaga", "Estagiário", "Supervisor", "Revisão"];
-
-function getStepLabels(isEstagidata: boolean) {
-  if (isEstagidata) return ["Vaga", "Estagiário", "Supervisor", "Projeto", "Revisão"];
-  return STEP_LABELS;
-}
 
 export function WizardContainer({ vagas, vagaIdInicial }: WizardContainerProps) {
   const vagaInicial = vagas.find((v) => v.id === vagaIdInicial);
@@ -68,10 +57,6 @@ export function WizardContainer({ vagas, vagaIdInicial }: WizardContainerProps) 
       : {}
   );
 
-  const isEstagidata = state.secretaria === "ESTAGIDATA";
-  const totalSteps = isEstagidata ? 5 : 4;
-  const stepLabels = getStepLabels(isEstagidata);
-
   function merge(data: object) {
     setState((prev) => ({ ...prev, ...data }));
   }
@@ -80,7 +65,7 @@ export function WizardContainer({ vagas, vagaIdInicial }: WizardContainerProps) 
   if (step === 0) {
     return (
       <div className="space-y-6">
-        <StepHeader step={step} labels={stepLabels} />
+        <StepHeader step={step} labels={STEP_LABELS} />
         <StepVaga
           vagas={vagas}
           vagaIdInicial={vagaIdInicial}
@@ -98,7 +83,7 @@ export function WizardContainer({ vagas, vagaIdInicial }: WizardContainerProps) 
   if (step === 1) {
     return (
       <div className="space-y-6">
-        <StepHeader step={step} labels={stepLabels} />
+        <StepHeader step={step} labels={STEP_LABELS} />
         <StepEstagiario
           secretaria={state.secretaria ?? ""}
           defaultValues={state as any}
@@ -113,40 +98,25 @@ export function WizardContainer({ vagas, vagaIdInicial }: WizardContainerProps) 
   if (step === 2) {
     return (
       <div className="space-y-6">
-        <StepHeader step={step} labels={stepLabels} />
+        <StepHeader step={step} labels={STEP_LABELS} />
         <StepSupervisor
           defaultValues={state as any}
-          isEstagidata={isEstagidata}
-          onNext={(data) => { merge(data); setStep(isEstagidata ? 3 : 4); }}
+          isEstagidata={false}
+          onNext={(data) => { merge(data); setStep(3); }}
           onBack={() => setStep(1)}
         />
       </div>
     );
   }
 
-  // Step 3: Projeto (ESTAGIDATA apenas)
-  if (step === 3 && isEstagidata) {
-    return (
-      <div className="space-y-6">
-        <StepHeader step={step} labels={stepLabels} />
-        <StepProjeto
-          defaultValues={state as any}
-          onNext={(data) => { merge(data); setStep(4); }}
-          onBack={() => setStep(2)}
-        />
-      </div>
-    );
-  }
-
   // Step final: Revisão
-  const revisaoStep = isEstagidata ? 4 : 3;
-  if (step >= revisaoStep && state.vagaId && state.nome) {
+  if (step >= 3 && state.vagaId && state.nome) {
     return (
       <div className="space-y-6">
-        <StepHeader step={isEstagidata ? 4 : 3} labels={stepLabels} />
+        <StepHeader step={3} labels={STEP_LABELS} />
         <StepRevisao
           data={state as any}
-          onBack={() => setStep(isEstagidata ? 3 : 2)}
+          onBack={() => setStep(2)}
         />
       </div>
     );

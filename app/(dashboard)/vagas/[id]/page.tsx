@@ -3,9 +3,11 @@ import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { StatusBadge, TipoBadge } from "@/components/modules/estagiarios/status-badge";
 import { buscarVagaPorId } from "@/actions/vagas";
+import { buscarFilaEspera } from "@/actions/fila-espera";
 import { formatDate, formatCPF, secretariaLabel } from "@/lib/utils";
 import { ArrowLeft, CheckCircle, XCircle, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FilaEsperaSection } from "@/components/modules/vagas/fila-espera-section";
 
 interface PageProps {
   params: { id: string };
@@ -15,11 +17,10 @@ export default async function VagaDetailPage({ params }: PageProps) {
   const vaga = await buscarVagaPorId(params.id);
   if (!vaga) notFound();
 
+  const fila = await buscarFilaEspera(params.id);
+
   const estagiarioAtual = vaga.estagiarios.find(
     (e) => e.status === "ATIVO" || e.status === "AGUARDANDO_CIDE"
-  );
-  const historico = vaga.estagiarios.filter(
-    (e) => e.status === "DESLIGADO"
   );
 
   return (
@@ -87,6 +88,14 @@ export default async function VagaDetailPage({ params }: PageProps) {
                 </Link>
               </div>
             )}
+
+            {/* Fila de espera */}
+            <FilaEsperaSection
+              vagaId={vaga.id}
+              vagaCodigo={vaga.codigo}
+              fila={fila}
+              vagaDisponivel={vaga.ativa}
+            />
           </div>
 
           {/* Histórico de ocupação */}

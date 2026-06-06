@@ -57,10 +57,10 @@ export function EstagiarioTable({ estagiarios }: EstagiarioTableProps) {
               return (
                 <tr key={e.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-slate-800">{e.nome}</td>
-                  <td className="px-4 py-3 text-slate-500 font-mono text-xs">
+                  <td className="px-4 py-3 text-slate-600">
                     {formatCPF(e.cpf)}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                  <td className="px-4 py-3 text-slate-600">
                     {e.vaga.codigo}
                   </td>
                   <td className="px-4 py-3 text-slate-600">

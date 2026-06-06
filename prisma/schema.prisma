@@ -31,6 +31,7 @@ model Vaga {
   secretaria  String
   ativa       Boolean      @default(true)
   estagiarios Estagiario[]
+  filaEspera  FilaEspera[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -120,4 +121,16 @@ model HistoricoAcao {
   acao         String
   detalhes     String?
   createdAt    DateTime   @default(now())
+}
+
+model FilaEspera {
+  id          String   @id @default(uuid())
+  vagaId      String
+  vaga        Vaga     @relation(fields: [vagaId], references: [id])
+  nome        String
+  contato     String?
+  observacoes String?
+  posicao     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

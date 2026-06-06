@@ -6,7 +6,8 @@ import { HistoricoTimeline } from "@/components/modules/estagiarios/historico-ti
 import { AtivarButton } from "@/components/modules/estagiarios/ativar-button";
 import { buscarEstagiarioPorId } from "@/actions/estagiarios";
 import { formatDate, formatCPF, secretariaLabel } from "@/lib/utils";
-import { ArrowLeft, Calendar, GraduationCap, User, Building } from "lucide-react";
+import { ArrowLeft, Calendar, GraduationCap, User, Building, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PageProps {
   params: { id: string };
@@ -22,6 +23,18 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
+function ResponsavelBadge({ nome }: { nome: string }) {
+  const iniciais = nome.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+  return (
+    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+      <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-700 shrink-0">
+        {iniciais}
+      </div>
+      <span className="text-xs text-slate-500">Registrado por <span className="font-medium text-slate-700">{nome}</span></span>
+    </div>
+  );
+}
+
 export default async function EstagiarioDetailPage({ params }: PageProps) {
   const estagiario = await buscarEstagiarioPorId(params.id);
   if (!estagiario) notFound();
@@ -31,17 +44,30 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
     (new Date(estagiario.dataFim).getTime() - hoje.getTime()) / 86400000
   );
 
+  // Buscar responsáveis pelo histórico
+  const responsavelContratacao = estagiario.historico.find(h => h.acao === "CADASTRO")?.usuario?.nome;
+  const responsavelAtivacao = estagiario.historico.find(h => h.acao === "ATIVACAO")?.usuario?.nome;
+  const responsavelDesligamento = estagiario.historico.find(h => h.acao === "DESLIGAMENTO")?.usuario?.nome;
+
   return (
     <>
       <Header title={estagiario.nome} />
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-        <Link
-          href="/estagiarios"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar para Estagiários
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link
+            href="/estagiarios"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar para Estagiários
+          </Link>
+          <Link href={`/estagiarios/${estagiario.id}/editar`}>
+            <Button variant="secondary" size="sm">
+              <Pencil className="w-4 h-4" />
+              Editar cadastro
+            </Button>
+          </Link>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Coluna principal */}
@@ -64,6 +90,9 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
                     Aguardando finalização pelo CIDE
                   </p>
                   <AtivarButton estagiarioId={estagiario.id} nome={estagiario.nome} />
+                  {responsavelContratacao && (
+                    <p className="text-xs text-yellow-700 mt-2">Cadastrado por: <strong>{responsavelContratacao}</strong></p>
+                  )}
                 </div>
               )}
 
@@ -91,6 +120,16 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
                 />
                 <InfoRow label="Limite do contrato" value={formatDate(estagiario.dataLimiteContrato)} />
                 <InfoRow label="e-DOC Contratação" value={estagiario.edocContratacao} />
+                {(responsavelContratacao || responsavelAtivacao) && (
+                  <div className="py-2">
+                    {responsavelContratacao && (
+                      <p className="text-xs text-slate-400">Cadastrado por: <span className="font-medium text-slate-600">{responsavelContratacao}</span></p>
+                    )}
+                    {responsavelAtivacao && (
+                      <p className="text-xs text-slate-400 mt-0.5">Contratação finalizada por: <span className="font-medium text-slate-600">{responsavelAtivacao}</span></p>
+                    )}
+                  </div>
+                )}
 
                 <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-4 pb-2 flex items-center gap-1.5">
                   <Building className="w-3.5 h-3.5" /> Lotação
@@ -134,17 +173,25 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
               <section className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="font-semibold text-slate-800 mb-3">Recessos ({estagiario.recessos.length})</h3>
                 <div className="space-y-2">
-                  {estagiario.recessos.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between text-sm bg-slate-50 rounded-lg px-3 py-2">
-                      <span className="font-medium">Recesso {r.numeroRecesso}</span>
-                      <span className="text-slate-500">
-                        {formatDate(r.dataInicioPeriodo)} → {formatDate(r.dataFimPeriodo)} ({r.quantidadeDias}d)
-                      </span>
-                      <span className={r.confirmado ? "text-green-600 font-medium" : "text-yellow-600"}>
-                        {r.confirmado ? "Confirmado" : "Pendente"}
-                      </span>
-                    </div>
-                  ))}
+                  {estagiario.recessos.map((r) => {
+                    const responsavel = estagiario.historico.find(
+                      h => h.acao === "RECESSO" && h.detalhes?.includes(`Recesso ${r.numeroRecesso} registrado`)
+                    )?.usuario?.nome;
+                    return (
+                      <div key={r.id} className="bg-slate-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">Recesso {r.numeroRecesso}</span>
+                          <span className="text-slate-500">
+                            {formatDate(r.dataInicioPeriodo)} → {formatDate(r.dataFimPeriodo)} ({r.quantidadeDias}d)
+                          </span>
+                          <span className={r.confirmado ? "text-green-600 font-medium" : "text-yellow-600"}>
+                            {r.confirmado ? "Confirmado" : "Pendente"}
+                          </span>
+                        </div>
+                        {responsavel && <ResponsavelBadge nome={responsavel} />}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -154,12 +201,20 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
               <section className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="font-semibold text-slate-800 mb-3">Renovações ({estagiario.renovacoes.length})</h3>
                 <div className="space-y-2">
-                  {estagiario.renovacoes.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between text-sm bg-slate-50 rounded-lg px-3 py-2">
-                      <span>Nova data de fim: <strong>{formatDate(r.dataNovaFim)}</strong></span>
-                      <span className="text-slate-500">{r.status.replace(/_/g, " ")}</span>
-                    </div>
-                  ))}
+                  {estagiario.renovacoes.map((r, i) => {
+                    const responsavel = estagiario.historico.filter(
+                      h => h.acao === "RENOVACAO"
+                    )[i]?.usuario?.nome;
+                    return (
+                      <div key={r.id} className="bg-slate-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Nova data de fim: <strong>{formatDate(r.dataNovaFim)}</strong></span>
+                          <span className="text-slate-500">{r.status.replace(/_/g, " ")}</span>
+                        </div>
+                        {responsavel && <ResponsavelBadge nome={responsavel} />}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -173,6 +228,11 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
                     <InfoRow label="Último dia" value={formatDate(d.dataUltimoDia)} />
                     <InfoRow label="Motivo" value={d.motivo.replace(/_/g, " ")} />
                     {d.observacoes && <InfoRow label="Observações" value={d.observacoes} />}
+                    {responsavelDesligamento && (
+                      <div className="pt-2">
+                        <ResponsavelBadge nome={responsavelDesligamento} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </section>

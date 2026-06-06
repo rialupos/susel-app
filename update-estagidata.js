@@ -1,0 +1,1 @@
+const{PrismaClient}=require('@prisma/client');require('dotenv').config({path:'.env.local'});const p=new PrismaClient();p.configuracaoVagas.update({where:{secretaria:'ESTAGIDATA'},data:{vagasAutorizadas:10}}).then(r=>{console.log('Atualizado:',r);p.$disconnect()}).catch(e=>{console.error(e);p.$disconnect()})
