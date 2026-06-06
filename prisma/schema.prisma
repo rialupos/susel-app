@@ -71,6 +71,7 @@ model Estagiario {
   renovacoes                Renovacao[]
   desligamentos             Desligamento[]
   historico                 HistoricoAcao[]
+  avaliacoes                Avaliacao[]
   createdAt                 DateTime        @default(now())
   updatedAt                 DateTime        @updatedAt
 }
@@ -133,4 +134,26 @@ model FilaEspera {
   posicao     Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+model Avaliacao {
+  id              String     @id @default(uuid())
+  estagiarioId    String
+  estagiario      Estagiario @relation(fields: [estagiarioId], references: [id])
+  token           String     @unique @default(uuid())
+  periodoAvaliado String
+  assiduidade     String?
+  relacionamento  String?
+  assimilacao     String?
+  iniciativa      String?
+  organizacao     String?
+  desempenho      String?
+  qualidade       String?
+  conhecimentos   String?
+  tomadaDecisao   String?
+  seguranca       String?
+  notaFinal       Float?
+  observacoes     String?
+  preenchidoEm    DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 }

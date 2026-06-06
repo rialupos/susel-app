@@ -5,9 +5,11 @@ import { StatusBadge, TipoBadge } from "@/components/modules/estagiarios/status-
 import { HistoricoTimeline } from "@/components/modules/estagiarios/historico-timeline";
 import { AtivarButton } from "@/components/modules/estagiarios/ativar-button";
 import { buscarEstagiarioPorId } from "@/actions/estagiarios";
+import { buscarAvaliacoesPorEstagiario } from "@/actions/avaliacoes";
 import { formatDate, formatCPF, secretariaLabel } from "@/lib/utils";
 import { ArrowLeft, Calendar, GraduationCap, User, Building, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AvaliacoesSection } from "@/components/modules/estagiarios/avaliacoes-section";
 
 interface PageProps {
   params: { id: string };
@@ -36,7 +38,10 @@ function ResponsavelBadge({ nome }: { nome: string }) {
 }
 
 export default async function EstagiarioDetailPage({ params }: PageProps) {
-  const estagiario = await buscarEstagiarioPorId(params.id);
+  const [estagiario, avaliacoes] = await Promise.all([
+    buscarEstagiarioPorId(params.id),
+    buscarAvaliacoesPorEstagiario(params.id),
+  ]);
   if (!estagiario) notFound();
 
   const hoje = new Date();
@@ -44,7 +49,6 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
     (new Date(estagiario.dataFim).getTime() - hoje.getTime()) / 86400000
   );
 
-  // Buscar responsáveis pelo histórico
   const responsavelContratacao = estagiario.historico.find(h => h.acao === "CADASTRO")?.usuario?.nome;
   const responsavelAtivacao = estagiario.historico.find(h => h.acao === "ATIVACAO")?.usuario?.nome;
   const responsavelDesligamento = estagiario.historico.find(h => h.acao === "DESLIGAMENTO")?.usuario?.nome;
@@ -54,10 +58,7 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
       <Header title={estagiario.nome} />
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
         <div className="flex items-center justify-between">
-          <Link
-            href="/estagiarios"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary"
-          >
+          <Link href="/estagiarios" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary">
             <ArrowLeft className="w-4 h-4" />
             Voltar para Estagiários
           </Link>
@@ -70,7 +71,7 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Coluna principal */}
+          {/* Coluna principal (esquerda) */}
           <div className="lg:col-span-2 space-y-4">
             <section className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-start justify-between mb-4">
@@ -86,9 +87,7 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
 
               {estagiario.status === "AGUARDANDO_CIDE" && (
                 <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800 mb-2 font-medium">
-                    Aguardando finalização pelo CIDE
-                  </p>
+                  <p className="text-sm text-yellow-800 mb-2 font-medium">Aguardando finalização pelo CIDE</p>
                   <AtivarButton estagiarioId={estagiario.id} nome={estagiario.nome} />
                   {responsavelContratacao && (
                     <p className="text-xs text-yellow-700 mt-2">Cadastrado por: <strong>{responsavelContratacao}</strong></p>
@@ -114,20 +113,13 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
                   <InfoRow label="Substitui" value={estagiario.estagiarioSubstituidoNome} />
                 )}
                 <InfoRow label="Início" value={formatDate(estagiario.dataInicio)} />
-                <InfoRow
-                  label="Fim do contrato"
-                  value={`${formatDate(estagiario.dataFim)}${diasParaFim <= 30 && estagiario.status === "ATIVO" ? ` (${diasParaFim} dias restantes)` : ""}`}
-                />
+                <InfoRow label="Fim do contrato" value={`${formatDate(estagiario.dataFim)}${diasParaFim <= 30 && estagiario.status === "ATIVO" ? ` (${diasParaFim} dias restantes)` : ""}`} />
                 <InfoRow label="Limite do contrato" value={formatDate(estagiario.dataLimiteContrato)} />
                 <InfoRow label="e-DOC Contratação" value={estagiario.edocContratacao} />
                 {(responsavelContratacao || responsavelAtivacao) && (
                   <div className="py-2">
-                    {responsavelContratacao && (
-                      <p className="text-xs text-slate-400">Cadastrado por: <span className="font-medium text-slate-600">{responsavelContratacao}</span></p>
-                    )}
-                    {responsavelAtivacao && (
-                      <p className="text-xs text-slate-400 mt-0.5">Contratação finalizada por: <span className="font-medium text-slate-600">{responsavelAtivacao}</span></p>
-                    )}
+                    {responsavelContratacao && <p className="text-xs text-slate-400">Cadastrado por: <span className="font-medium text-slate-600">{responsavelContratacao}</span></p>}
+                    {responsavelAtivacao && <p className="text-xs text-slate-400 mt-0.5">Contratação finalizada por: <span className="font-medium text-slate-600">{responsavelAtivacao}</span></p>}
                   </div>
                 )}
 
@@ -147,18 +139,6 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
                 <InfoRow label="Formação" value={estagiario.supervisorFormacao} />
                 <InfoRow label="Ramal" value={estagiario.supervisorRamal} />
 
-                {estagiario.tipo === "ESTAGIDATA" && estagiario.nomeProjeto && (
-                  <>
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-4 pb-2">
-                      Projeto ESTAGIDATA
-                    </h3>
-                    <InfoRow label="Projeto" value={estagiario.nomeProjeto} />
-                    <InfoRow label="Justificativa" value={estagiario.justificativaProjeto} />
-                    <InfoRow label="Escopo" value={estagiario.escopoProjeto} />
-                    <InfoRow label="Cronograma" value={estagiario.cronogramaProjeto} />
-                  </>
-                )}
-
                 {estagiario.observacoes && (
                   <div className="py-2">
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Observações</p>
@@ -168,7 +148,6 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
               </div>
             </section>
 
-            {/* Recessos */}
             {estagiario.recessos.length > 0 && (
               <section className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="font-semibold text-slate-800 mb-3">Recessos ({estagiario.recessos.length})</h3>
@@ -181,12 +160,8 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
                       <div key={r.id} className="bg-slate-50 rounded-lg px-3 py-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-medium">Recesso {r.numeroRecesso}</span>
-                          <span className="text-slate-500">
-                            {formatDate(r.dataInicioPeriodo)} → {formatDate(r.dataFimPeriodo)} ({r.quantidadeDias}d)
-                          </span>
-                          <span className={r.confirmado ? "text-green-600 font-medium" : "text-yellow-600"}>
-                            {r.confirmado ? "Confirmado" : "Pendente"}
-                          </span>
+                          <span className="text-slate-500">{formatDate(r.dataInicioPeriodo)} → {formatDate(r.dataFimPeriodo)} ({r.quantidadeDias}d)</span>
+                          <span className={r.confirmado ? "text-green-600 font-medium" : "text-yellow-600"}>{r.confirmado ? "Confirmado" : "Pendente"}</span>
                         </div>
                         {responsavel && <ResponsavelBadge nome={responsavel} />}
                       </div>
@@ -196,15 +171,12 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
               </section>
             )}
 
-            {/* Renovações */}
             {estagiario.renovacoes.length > 0 && (
               <section className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="font-semibold text-slate-800 mb-3">Renovações ({estagiario.renovacoes.length})</h3>
                 <div className="space-y-2">
                   {estagiario.renovacoes.map((r, i) => {
-                    const responsavel = estagiario.historico.filter(
-                      h => h.acao === "RENOVACAO"
-                    )[i]?.usuario?.nome;
+                    const responsavel = estagiario.historico.filter(h => h.acao === "RENOVACAO")[i]?.usuario?.nome;
                     return (
                       <div key={r.id} className="bg-slate-50 rounded-lg px-3 py-2">
                         <div className="flex items-center justify-between text-sm">
@@ -219,7 +191,6 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
               </section>
             )}
 
-            {/* Desligamento */}
             {estagiario.desligamentos.length > 0 && (
               <section className="bg-white border border-red-100 rounded-xl p-6">
                 <h3 className="font-semibold text-red-800 mb-3">Desligamento</h3>
@@ -228,18 +199,17 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
                     <InfoRow label="Último dia" value={formatDate(d.dataUltimoDia)} />
                     <InfoRow label="Motivo" value={d.motivo.replace(/_/g, " ")} />
                     {d.observacoes && <InfoRow label="Observações" value={d.observacoes} />}
-                    {responsavelDesligamento && (
-                      <div className="pt-2">
-                        <ResponsavelBadge nome={responsavelDesligamento} />
-                      </div>
-                    )}
+                    {responsavelDesligamento && <div className="pt-2"><ResponsavelBadge nome={responsavelDesligamento} /></div>}
                   </div>
                 ))}
               </section>
             )}
+
+            {/* Avaliações — coluna esquerda, abaixo do desligamento */}
+            <AvaliacoesSection estagiarioId={estagiario.id} avaliacoes={avaliacoes} />
           </div>
 
-          {/* Coluna lateral */}
+          {/* Coluna lateral (direita) */}
           <div className="space-y-4">
             <section className="bg-white border border-slate-200 rounded-xl p-6">
               <h3 className="font-semibold text-slate-800 mb-4">Histórico de Ações</h3>
@@ -250,18 +220,9 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
               <section className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="font-semibold text-slate-800 mb-3">Ações Rápidas</h3>
                 <div className="space-y-1">
-                  <Link href={`/recesso?estagiarioId=${estagiario.id}`}
-                    className="block text-sm text-slate-700 hover:text-primary px-3 py-2 rounded-lg hover:bg-slate-50 transition">
-                    → Registrar Recesso
-                  </Link>
-                  <Link href={`/renovacao?estagiarioId=${estagiario.id}`}
-                    className="block text-sm text-slate-700 hover:text-primary px-3 py-2 rounded-lg hover:bg-slate-50 transition">
-                    → Iniciar Renovação
-                  </Link>
-                  <Link href={`/desligamento?estagiarioId=${estagiario.id}`}
-                    className="block text-sm text-red-600 hover:text-red-800 px-3 py-2 rounded-lg hover:bg-red-50 transition">
-                    → Registrar Desligamento
-                  </Link>
+                  <Link href={`/recesso?estagiarioId=${estagiario.id}`} className="block text-sm text-slate-700 hover:text-primary px-3 py-2 rounded-lg hover:bg-slate-50 transition">→ Registrar Recesso</Link>
+                  <Link href={`/renovacao?estagiarioId=${estagiario.id}`} className="block text-sm text-slate-700 hover:text-primary px-3 py-2 rounded-lg hover:bg-slate-50 transition">→ Iniciar Renovação</Link>
+                  <Link href={`/desligamento?estagiarioId=${estagiario.id}`} className="block text-sm text-red-600 hover:text-red-800 px-3 py-2 rounded-lg hover:bg-red-50 transition">→ Registrar Desligamento</Link>
                 </div>
               </section>
             )}
