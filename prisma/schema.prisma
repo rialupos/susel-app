@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        String          @id @default(uuid())
+  nome      String
+  email     String          @unique
+  senhaHash String
+  ativo     Boolean         @default(true)
+  acoes     HistoricoAcao[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model ConfiguracaoVagas {
+  id               String   @id @default(uuid())
+  secretaria       String   @unique
+  vagasAutorizadas Int
+  updatedAt        DateTime @updatedAt
+}
+
+model Vaga {
+  id          String       @id @default(uuid())
+  codigo      String       @unique
+  secretaria  String
+  ativa       Boolean      @default(true)
+  estagiarios Estagiario[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Estagiario {
+  id                        String          @id @default(uuid())
+  nome                      String
+  cpf                       String          @unique
+  vagaId                    String
+  vaga                      Vaga            @relation(fields: [vagaId], references: [id])
+  nivel                     String
+  curso                     String
+  horario                   String
+  instituicaoEnsino         String
+  tipoVaga                  String
+  estagiarioSubstituidoNome String?
+  dataInicio                DateTime
+  dataFim                   DateTime
+  dataLimiteContrato        DateTime
+  status                    String          @default("AGUARDANDO_CIDE")
+  tipo                      String          @default("REGULAR")
+  lotacao                   String
+  supervisorNome            String
+  supervisorFormacao        String?
+  supervisorCargo           String?
+  supervisorRamal           String?
+  unidadeGestora            String
+  secretariaInterna         String?
+  atividadesDesenvolvidas   String?
+  edocContratacao           String?
+  observacoes               String?
+  nomeProjeto               String?
+  justificativaProjeto      String?
+  escopoProjeto             String?
+  cronogramaProjeto         String?
+  recessos                  Recesso[]
+  renovacoes                Renovacao[]
+  desligamentos             Desligamento[]
+  historico                 HistoricoAcao[]
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+}
+
+model Recesso {
+  id                String     @id @default(uuid())
+  estagiarioId      String
+  estagiario        Estagiario @relation(fields: [estagiarioId], references: [id])
+  numeroRecesso     Int
+  dataInicioPeriodo DateTime
+  dataFimPeriodo    DateTime
+  quantidadeDias    Int
+  confirmado        Boolean    @default(false)
+  observacoes       String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model Renovacao {
+  id            String     @id @default(uuid())
+  estagiarioId  String
+  estagiario    Estagiario @relation(fields: [estagiarioId], references: [id])
+  dataNovaFim   DateTime
+  status        String     @default("AGUARDANDO_CIDE")
+  observacoes   String?
+  enviadoCideEm DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Desligamento {
+  id            String     @id @default(uuid())
+  estagiarioId  String
+  estagiario    Estagiario @relation(fields: [estagiarioId], references: [id])
+  dataUltimoDia DateTime
+  motivo        String
+  observacoes   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model HistoricoAcao {
+  id           String     @id @default(uuid())
+  estagiarioId String
+  estagiario   Estagiario @relation(fields: [estagiarioId], references: [id])
+  usuarioId    String
+  usuario      Usuario    @relation(fields: [usuarioId], references: [id])
+  acao         String
+  detalhes     String?
+  createdAt    DateTime   @default(now())
+}
