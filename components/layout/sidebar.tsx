@@ -14,6 +14,7 @@ import {
   Settings,
   LogOut,
   Upload,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/recesso", icon: Palmtree, label: "Recesso" },
   { href: "/renovacao", icon: RefreshCw, label: "Renovação" },
   { href: "/desligamento", icon: UserMinus, label: "Desligamento" },
+  { href: "/avaliacoes", icon: ClipboardCheck, label: "Avaliação" },
   { href: "/relatorios", icon: FileText, label: "Relatórios" },
   { href: "/configuracoes", icon: Settings, label: "Configurações" },
   { href: "/admin/importar", icon: Upload, label: "Importar Excel" },
