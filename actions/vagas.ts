@@ -1,5 +1,4 @@
 "use server";
-
 import { prisma } from "@/lib/prisma";
 
 export async function buscarVagasPorSecretaria() {
@@ -7,13 +6,12 @@ export async function buscarVagasPorSecretaria() {
     orderBy: [{ secretaria: "asc" }, { codigo: "asc" }],
     include: {
       estagiarios: {
-        where: { status: { in: ["ATIVO", "AGUARDANDO_CIDE"] } },
+        where: { status: { in: ["ATIVO", "AGUARDANDO_CIDE", "ENVIADO_CIDE"] } },
         select: { id: true, nome: true, status: true, dataInicio: true, dataFim: true },
         take: 1,
       },
     },
   });
-
   const porSecretaria: Record<string, typeof vagas> = {};
   for (const v of vagas) {
     if (!porSecretaria[v.secretaria]) porSecretaria[v.secretaria] = [];

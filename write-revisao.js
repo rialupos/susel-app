@@ -1,0 +1,12 @@
+const fs = require('fs');
+const content = `"use client";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { formatDate, formatCPF, secretariaLabel } from "@/lib/utils";
+import { Copy, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
+import { criarEstagiario, enviarParaCide } from "@/actions/estagiarios";
+import { useRouter } from "next/navigation";
+`;
+fs.writeFileSync('components/modules/wizard/step-revisao.tsx', content);
+console.log('OK');
