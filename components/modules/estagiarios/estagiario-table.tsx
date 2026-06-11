@@ -7,6 +7,7 @@ type Estagiario = {
   id: string;
   nome: string;
   cpf: string;
+  dataInicio: Date;
   nivel: string;
   curso: string;
   tipo: string;
@@ -36,7 +37,7 @@ export function EstagiarioTable({ estagiarios }: EstagiarioTableProps) {
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className="text-left px-4 py-3 font-medium text-slate-600">Nome</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">CPF</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Data Prev. Início</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Vaga</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Secretaria</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Nível</th>
@@ -58,7 +59,7 @@ export function EstagiarioTable({ estagiarios }: EstagiarioTableProps) {
                 <tr key={e.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-slate-800">{e.nome}</td>
                   <td className="px-4 py-3 text-slate-600">
-                    {formatCPF(e.cpf)}
+                    {formatDate(e.dataInicio)}
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     {e.vaga.codigo}

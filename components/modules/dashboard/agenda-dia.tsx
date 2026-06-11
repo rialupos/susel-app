@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, RefreshCw, ClipboardCheck, Palmtree } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, ClipboardCheck, Palmtree, CheckCircle } from "lucide-react";
 
 interface EstagiarioAlerta {
   id: string;
   nome: string;
+  vaga?: { codigo: string; secretaria: string };
   dataInicio: Date;
   dataFim: Date;
   renovacoes: { id: string }[];
@@ -31,11 +32,20 @@ function calcularAlertas(estagiarios: EstagiarioAlerta[], data: Date) {
   const renovacoes: { id: string; nome: string; diasRestantes: number }[] = [];
   const avaliacoes: { id: string; nome: string; meses: number }[] = [];
   const recessos: { id: string; nome: string }[] = [];
+  const inicios: { id: string; nome: string; vaga: string }[] = [];
 
   for (const e of estagiarios) {
     const dataInicio = new Date(e.dataInicio);
     const dataFim = new Date(e.dataFim);
     const meses = mesesDeEstagio(dataInicio, data);
+
+    if (
+      dataInicio.getDate() === data.getDate() &&
+      dataInicio.getMonth() === data.getMonth() &&
+      dataInicio.getFullYear() === data.getFullYear()
+    ) {
+      inicios.push({ id: e.id, nome: e.nome, vaga: e.vaga ? e.vaga.codigo + " / " + e.vaga.secretaria : "" });
+    }
 
     const diasRestantes = Math.ceil((dataFim.getTime() - data.getTime()) / 86400000);
     if (diasRestantes >= 0 && diasRestantes <= 30 && e.renovacoes.length === 0) {
@@ -69,7 +79,7 @@ function calcularAlertas(estagiarios: EstagiarioAlerta[], data: Date) {
     }
   }
 
-  return { renovacoes, avaliacoes, recessos };
+  return { renovacoes, avaliacoes, recessos, inicios };
 }
 
 export function AgendaDia({ estagiarios }: AgendaDiaProps) {
@@ -95,8 +105,8 @@ export function AgendaDia({ estagiarios }: AgendaDiaProps) {
     setData(nova);
   }
 
-  const { renovacoes, avaliacoes, recessos } = calcularAlertas(estagiarios, data);
-  const total = renovacoes.length + avaliacoes.length + recessos.length;
+  const { renovacoes, avaliacoes, recessos, inicios } = calcularAlertas(estagiarios, data);
+  const total = renovacoes.length + avaliacoes.length + recessos.length + inicios.length;
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5">
@@ -119,6 +129,25 @@ export function AgendaDia({ estagiarios }: AgendaDiaProps) {
         <p className="text-center text-sm text-slate-400 py-6">Nenhum compromisso para este dia.</p>
       ) : (
         <div className="space-y-4">
+          {inicios.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Inicio do Estagiario
+              </p>
+              <div className="space-y-2">
+                {inicios.map((i) => (
+                  <Link key={i.id} href={`/estagiarios/${i.id}`} className="flex items-center justify-between p-3 bg-green-50 border-l-4 border-green-500 rounded-r-lg hover:bg-green-100 transition">
+                    <div>
+                      <p className="text-sm font-medium text-green-900">{i.nome}</p>
+                      <p className="text-xs text-green-700">{i.vaga} &mdash; inicio hoje!</p>
+                    </div>
+                    <span className="text-xs font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">inicio</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {renovacoes.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1">
@@ -148,7 +177,7 @@ export function AgendaDia({ estagiarios }: AgendaDiaProps) {
                   <Link key={a.id} href={`/estagiarios/${a.id}`} className="flex items-center justify-between p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg hover:bg-blue-100 transition">
                     <div>
                       <p className="text-sm font-medium text-blue-900">{a.nome}</p>
-                      <p className="text-xs text-blue-700">Completa {a.meses} meses hoje — enviar avaliacao ao supervisor</p>
+                      <p className="text-xs text-blue-700">Completa {a.meses} meses hoje &mdash; enviar avaliacao ao supervisor</p>
                     </div>
                     <span className="text-xs font-bold bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">{a.meses}m</span>
                   </Link>
@@ -167,7 +196,7 @@ export function AgendaDia({ estagiarios }: AgendaDiaProps) {
                   <Link key={r.id} href={`/recesso?estagiarioId=${r.id}`} className="flex items-center justify-between p-3 bg-green-50 border-l-4 border-green-400 rounded-r-lg hover:bg-green-100 transition">
                     <div>
                       <p className="text-sm font-medium text-green-900">{r.nome}</p>
-                      <p className="text-xs text-green-700">Completou 1 ano de estagio — marcar recesso</p>
+                      <p className="text-xs text-green-700">Completou 1 ano de estagio &mdash; marcar recesso</p>
                     </div>
                     <span className="text-xs font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">1 ano</span>
                   </Link>

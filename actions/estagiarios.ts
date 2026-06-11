@@ -94,6 +94,7 @@ export async function buscarEstagiarios(filtros: { secretaria?: string; status?:
   const estagiarios = await prisma.estagiario.findMany({
     where: { ...where, vaga: vagaFiltro },
     include: { vaga: { select: { codigo: true, secretaria: true } } },
+    select: undefined,
     orderBy: { nome: "asc" },
   });
   return estagiarios;

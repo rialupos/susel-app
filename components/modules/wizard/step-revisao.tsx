@@ -24,7 +24,7 @@ function gerarEmailCide(data: WizardData): string {
 
 Prezados,
 
-Solicitamos a contratacao do(a) estudante ${data.nome} com a data prevista para inicio no dia xx/xx/xxxx.
+Solicitamos a contratacao do(a) estudante ${data.nome} com a data prevista para inicio no dia ${formatDate(data.dataInicio)}.
 e-mail do(a) supervisor(a): ${data.supervisorEmail ?? ""}
 
 Segue em anexo o curriculo e o formulario da solicitacao.
