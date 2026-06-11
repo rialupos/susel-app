@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -12,18 +11,15 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-
     const form = new FormData(e.currentTarget);
     const result = await signIn("credentials", {
       email: form.get("email"),
       password: form.get("password"),
       redirect: false,
     });
-
     setLoading(false);
-
     if (result?.error) {
-      toast.error("E-mail ou senha inválidos.");
+      toast.error("E-mail ou senha invalidos.");
     } else {
       router.push("/dashboard");
       router.refresh();
@@ -31,23 +27,36 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-primary-dark flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white tracking-wider">SUSEL</h1>
-          <p className="text-blue-300 text-sm mt-1">Sistema de Gestão de Estágios</p>
-          <p className="text-blue-400 text-xs mt-0.5">Tribunal de Contas do Distrito Federal</p>
-        </div>
+    <div className="min-h-screen flex">
+      <div className="hidden md:flex flex-1 bg-[#184A8C] flex-col items-center justify-center px-12 py-16">
+        <img
+          src="/tcdf-logo.png"
+          alt="Logo TCDF"
+          width={120}
+          height={120}
+          style={{ marginBottom: "2rem" }}
+        />
+        <h1 className="text-white text-3xl font-bold tracking-widest mb-2">SUSEL</h1>
+        <p className="text-blue-200 text-sm text-center leading-relaxed">
+          Supervisao de Selecao e<br />Gestao de Estagios
+        </p>
+      </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-slate-800 mb-6">Acesso ao Sistema</h2>
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 bg-white">
+        <div className="w-full max-w-sm">
+          <div className="md:hidden text-center mb-8">
+            <img src="/tcdf-logo.png" alt="Logo TCDF" width={80} height={80} style={{ margin: "0 auto 1rem" }} />
+            <h1 className="text-2xl font-bold text-slate-800">SUSEL</h1>
+            <p className="text-slate-500 text-sm">Supervisao de Selecao e Gestao de Estagios</p>
+          </div>
+
+          <h2 className="text-xl font-semibold text-slate-800 mb-1">Bem-vindo</h2>
+          <p className="text-sm text-slate-500 mb-8">Acesse o sistema com suas credenciais</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
-                E-mail institucional
+              <label htmlFor="email" className="block text-xs font-medium text-slate-600 mb-1.5">
+                E-mail
               </label>
               <input
                 id="email"
@@ -55,13 +64,12 @@ export default function LoginPage() {
                 type="email"
                 required
                 autoComplete="email"
-                placeholder="usuario@tcdf.gov.br"
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                placeholder="seu@tcdf.gov.br"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition"
               />
             </div>
-
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="password" className="block text-xs font-medium text-slate-600 mb-1.5">
                 Senha
               </label>
               <input
@@ -71,23 +79,22 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition"
               />
             </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-light disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition text-sm mt-2"
+              className="w-full bg-[#184A8C] hover:bg-[#1a5299] disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition text-sm mt-2"
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Entrando..." : "Entrar no sistema"}
             </button>
           </form>
-        </div>
 
-        <p className="text-center text-blue-400 text-xs mt-6">
-          SUSEL · TCDF © {new Date().getFullYear()}
-        </p>
+          <p className="text-center text-slate-400 text-xs mt-10">
+            SUSEL · SEGEP · TCDF · {new Date().getFullYear()}
+          </p>
+        </div>
       </div>
     </div>
   );
