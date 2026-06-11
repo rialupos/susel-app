@@ -15,6 +15,7 @@ import {
   Upload,
   ClipboardCheck,
   KanbanSquare,
+  BookUser
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/desligamento", icon: UserMinus, label: "Desligamento" },
   { href: "/kanban", icon: KanbanSquare, label: "Contratacoes" },
   { href: "/avaliacoes", icon: ClipboardCheck, label: "Avaliacao" },
+  { href: "/talentos", icon: BookUser, label: "Banco de Talentos" },
   { href: "/relatorios", icon: FileText, label: "Relatorios" },
   { href: "/configuracoes", icon: Settings, label: "Configuracoes" },
   { href: "/admin/importar", icon: Upload, label: "Importar Excel" },

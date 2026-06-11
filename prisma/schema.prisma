@@ -157,3 +157,14 @@ model Avaliacao {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 }
+model Talento {
+  id               String   @id @default(uuid())
+  nome             String
+  instituicaoEnsino String
+  semestre         String
+  area             String
+  curriculo        Bytes?
+  curriculoNome    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
