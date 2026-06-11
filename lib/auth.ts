@@ -17,35 +17,39 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-
         const usuario = await prisma.usuario.findUnique({
           where: { email: credentials.email },
         });
-
         if (!usuario || !usuario.ativo) return null;
-
         const senhaCorreta = await bcrypt.compare(
           credentials.password,
           usuario.senhaHash
         );
         if (!senhaCorreta) return null;
-
         return {
           id: usuario.id,
           name: usuario.nome,
           email: usuario.email,
+          perfil: usuario.perfil,
+          secretaria: usuario.secretaria,
         };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        token.perfil = (user as any).perfil;
+        token.secretaria = (user as any).secretaria;
+      }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as { id?: string }).id = token.id as string;
+        (session.user as any).id = token.id;
+        (session.user as any).perfil = token.perfil;
+        (session.user as any).secretaria = token.secretaria;
       }
       return session;
     },

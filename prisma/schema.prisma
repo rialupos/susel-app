@@ -8,14 +8,16 @@ datasource db {
 }
 
 model Usuario {
-  id        String          @id @default(uuid())
-  nome      String
-  email     String          @unique
-  senhaHash String
-  ativo     Boolean         @default(true)
-  acoes     HistoricoAcao[]
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  id         String          @id @default(uuid())
+  nome       String
+  email      String          @unique
+  senhaHash  String
+  ativo      Boolean         @default(true)
+  perfil     String          @default("SUSEL")
+  secretaria String?
+  acoes      HistoricoAcao[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 }
 
 model ConfiguracaoVagas {

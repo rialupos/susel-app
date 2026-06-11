@@ -1,5 +1,4 @@
 "use server";
-
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
@@ -7,19 +6,29 @@ import bcrypt from "bcryptjs";
 export async function listarUsuarios() {
   return prisma.usuario.findMany({
     orderBy: { nome: "asc" },
-    select: { id: true, nome: true, email: true, ativo: true, createdAt: true },
+    select: { id: true, nome: true, email: true, ativo: true, perfil: true, secretaria: true, createdAt: true },
   });
 }
 
-export async function criarUsuario(data: { nome: string; email: string; senha: string }) {
+export async function criarUsuario(data: {
+  nome: string;
+  email: string;
+  senha: string;
+  perfil: string;
+  secretaria?: string | null;
+}) {
   const existente = await prisma.usuario.findUnique({ where: { email: data.email } });
-  if (existente) throw new Error("E-mail já cadastrado.");
-
+  if (existente) throw new Error("E-mail ja cadastrado.");
   const senhaHash = await bcrypt.hash(data.senha, 12);
   await prisma.usuario.create({
-    data: { nome: data.nome, email: data.email, senhaHash },
+    data: {
+      nome: data.nome,
+      email: data.email,
+      senhaHash,
+      perfil: data.perfil,
+      secretaria: data.secretaria ?? null,
+    },
   });
-
   revalidatePath("/configuracoes");
 }
 

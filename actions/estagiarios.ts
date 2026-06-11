@@ -15,6 +15,15 @@ async function registrarHistorico(estagiarioId: string, usuarioId: string, acao:
   await prisma.historicoAcao.create({ data: { estagiarioId, usuarioId, acao, detalhes } });
 }
 
+function getSecretariaFiltro(session: any) {
+  const perfil = session.user?.perfil ?? "SUSEL";
+  const secretaria = session.user?.secretaria;
+  if (perfil === "GRANDE_AREA" && secretaria) {
+    return { secretaria: { in: [secretaria, "ESTAGIDATA"] } };
+  }
+  return {};
+}
+
 export async function criarEstagiario(raw: unknown) {
   const session = await getSession();
   const data = estagiarioSchema.parse(raw);
@@ -26,7 +35,7 @@ export async function criarEstagiario(raw: unknown) {
   const estagiario = await prisma.estagiario.create({
     data: { ...data, cpf: cpfLimpo, status: "AGUARDANDO_CIDE", dataInicio: new Date(data.dataInicio), dataFim: new Date(data.dataFim), dataLimiteContrato: new Date(data.dataLimiteContrato) },
   });
-  await registrarHistorico(estagiario.id, (session.user as { id: string }).id, "CADASTRO", `Estagiario cadastrado na vaga ${vaga.codigo}`);
+  await registrarHistorico(estagiario.id, (session.user as any).id, "CADASTRO", `Estagiario cadastrado na vaga ${vaga.codigo}`);
   revalidatePath("/estagiarios");
   return { id: estagiario.id };
 }
@@ -34,7 +43,7 @@ export async function criarEstagiario(raw: unknown) {
 export async function enviarParaCide(estagiarioId: string) {
   const session = await getSession();
   await prisma.estagiario.update({ where: { id: estagiarioId }, data: { status: "ENVIADO_CIDE" } });
-  await registrarHistorico(estagiarioId, (session.user as { id: string }).id, "ENVIO_CIDE", "Contratacao enviada ao Agente Integrador");
+  await registrarHistorico(estagiarioId, (session.user as any).id, "ENVIO_CIDE", "Contratacao enviada ao Agente Integrador");
   revalidatePath("/estagiarios");
   revalidatePath(`/estagiarios/${estagiarioId}`);
   revalidatePath("/kanban");
@@ -45,7 +54,7 @@ export async function ativarEstagiario(estagiarioId: string) {
   const session = await getSession();
   const estagiario = await prisma.estagiario.update({ where: { id: estagiarioId }, data: { status: "ATIVO" }, include: { vaga: true } });
   await prisma.vaga.update({ where: { id: estagiario.vagaId }, data: { ativa: false } });
-  await registrarHistorico(estagiarioId, (session.user as { id: string }).id, "ATIVACAO", "Contratacao finalizada - estagiario ativado");
+  await registrarHistorico(estagiarioId, (session.user as any).id, "ATIVACAO", "Contratacao finalizada - estagiario ativado");
   revalidatePath("/estagiarios");
   revalidatePath(`/estagiarios/${estagiarioId}`);
   revalidatePath("/vagas");
@@ -56,23 +65,34 @@ export async function ativarEstagiario(estagiarioId: string) {
 export async function confirmarInicio(estagiarioId: string) {
   const session = await getSession();
   await prisma.estagiario.update({ where: { id: estagiarioId }, data: { status: "INICIADO" } });
-  await registrarHistorico(estagiarioId, (session.user as { id: string }).id, "INICIO", "Estagiario confirmou inicio das atividades");
+  await registrarHistorico(estagiarioId, (session.user as any).id, "INICIO", "Estagiario confirmou inicio das atividades");
   revalidatePath("/kanban");
   revalidatePath(`/estagiarios/${estagiarioId}`);
   return { ok: true };
 }
 
 export async function buscarEstagiarios(filtros: { secretaria?: string; status?: string; tipo?: string; nivel?: string; busca?: string; }) {
+  const session = await getSession();
   const where: Record<string, unknown> = {};
   if (filtros.status) where.status = filtros.status;
   if (filtros.tipo) where.tipo = filtros.tipo;
   if (filtros.nivel) where.nivel = filtros.nivel;
   if (filtros.busca) {
-    const term = filtros.busca.replace(/\D/g, "").length >= 5 ? { cpf: { contains: filtros.busca.replace(/\D/g, "") } } : { nome: { contains: filtros.busca, mode: "insensitive" as const } };
+    const term = filtros.busca.replace(/\D/g, "").length >= 5
+      ? { cpf: { contains: filtros.busca.replace(/\D/g, "") } }
+      : { nome: { contains: filtros.busca, mode: "insensitive" as const } };
     Object.assign(where, term);
   }
+
+  const secretariaFiltro = getSecretariaFiltro(session);
+  const vagaFiltro = filtros.secretaria
+    ? { secretaria: filtros.secretaria }
+    : secretariaFiltro.secretaria
+    ? { secretaria: secretariaFiltro.secretaria }
+    : {};
+
   const estagiarios = await prisma.estagiario.findMany({
-    where: { ...where, ...(filtros.secretaria ? { vaga: { secretaria: filtros.secretaria } } : {}) },
+    where: { ...where, vaga: vagaFiltro },
     include: { vaga: { select: { codigo: true, secretaria: true } } },
     orderBy: { nome: "asc" },
   });
@@ -88,6 +108,7 @@ export async function buscarEstagiarioPorId(id: string) {
       renovacoes: { orderBy: { createdAt: "desc" } },
       desligamentos: { orderBy: { createdAt: "desc" } },
       historico: { include: { usuario: { select: { nome: true } } }, orderBy: { createdAt: "desc" } },
+      avaliacoes: { orderBy: { createdAt: "desc" } },
     },
   });
 }
