@@ -41,6 +41,7 @@ export function TalentosClient({ talentos, areas }: TalentosClientProps) {
   const [filtroArea, setFiltroArea] = useState("");
   const [filtroBusca, setFiltroBusca] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const [form, setForm] = useState({ nome: "", instituicaoEnsino: "", semestre: "", area: "" });
 
   const talentosFiltrados = talentos.filter(t => {
@@ -95,6 +96,17 @@ export function TalentosClient({ talentos, areas }: TalentosClientProps) {
 
   function abrirPdf(id: string) {
     window.open(`/api/talentos/${id}/curriculo`, "_blank");
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f?.type === "application/pdf") {
+      setArquivo(f);
+    } else {
+      toast.error("Apenas arquivos PDF sao aceitos.");
+    }
   }
 
   return (
@@ -164,10 +176,15 @@ export function TalentosClient({ talentos, areas }: TalentosClientProps) {
           </div>
           <div>
             <label className="text-xs text-slate-500 mb-1 block">Curriculo em PDF</label>
-            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-6 cursor-pointer hover:border-primary transition-colors">
+            <label
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${dragOver ? "border-primary bg-blue-50" : "border-slate-200 hover:border-primary"}`}
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
               <Upload className="w-6 h-6 text-slate-400 mb-2" />
               <span className="text-sm text-slate-500">
-                {arquivo ? arquivo.name : "Clique para selecionar o PDF"}
+                {arquivo ? arquivo.name : "Clique ou arraste o PDF aqui"}
               </span>
               <input type="file" accept=".pdf" className="hidden" onChange={e => setArquivo(e.target.files?.[0] ?? null)} />
             </label>
