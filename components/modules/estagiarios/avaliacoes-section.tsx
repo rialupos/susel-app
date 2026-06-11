@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { criarAvaliacao } from "@/actions/avaliacoes";
 import { useRouter } from "next/navigation";
 import { ClipboardList, Loader2, Copy, CheckCircle, ExternalLink } from "lucide-react";
+import { GerarPdfButton } from "@/components/modules/avaliacoes/gerar-pdf-button";
 
 interface Avaliacao {
   id: string;
@@ -30,19 +31,27 @@ interface Avaliacao {
 interface AvaliacoesSectionProps {
   estagiarioId: string;
   avaliacoes: Avaliacao[];
+  estagiario: {
+    nome: string;
+    curso: string;
+    supervisorNome: string;
+    supervisorCargo?: string | null;
+    unidadeGestora: string;
+    dataInicio: Date;
+  };
 }
 
 const INDICADORES = [
   { key: "assiduidade", label: "Assiduidade e pontualidade" },
   { key: "relacionamento", label: "Relacionamento" },
-  { key: "assimilacao", label: "Assimilação" },
+  { key: "assimilacao", label: "Assimilacao" },
   { key: "iniciativa", label: "Iniciativa" },
-  { key: "organizacao", label: "Organização" },
+  { key: "organizacao", label: "Organizacao" },
   { key: "desempenho", label: "Desempenho" },
   { key: "qualidade", label: "Qualidade" },
   { key: "conhecimentos", label: "Conhecimentos" },
-  { key: "tomadaDecisao", label: "Tomada de decisão" },
-  { key: "seguranca", label: "Segurança" },
+  { key: "tomadaDecisao", label: "Tomada de decisao" },
+  { key: "seguranca", label: "Seguranca" },
 ];
 
 const corNota = (nota: number) => {
@@ -59,7 +68,7 @@ const corConceito = (c: string | null) => {
   return "bg-slate-100 text-slate-500";
 };
 
-export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectionProps) {
+export function AvaliacoesSection({ estagiarioId, avaliacoes, estagiario }: AvaliacoesSectionProps) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,18 +80,18 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
 
   async function handleCriar() {
     if (!periodo.trim()) {
-      toast.error("Informe o período avaliado.");
+      toast.error("Informe o periodo avaliado.");
       return;
     }
     setLoading(true);
     try {
       await criarAvaliacao(estagiarioId, periodo.trim());
-      toast.success("Avaliação criada! Copie o link e envie ao supervisor.");
+      toast.success("Avaliacao criada! Copie o link e envie ao supervisor.");
       setPeriodo("");
       setShowForm(false);
       router.refresh();
     } catch {
-      toast.error("Erro ao criar avaliação.");
+      toast.error("Erro ao criar avaliacao.");
     } finally {
       setLoading(false);
     }
@@ -100,7 +109,7 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-slate-500" />
-          <h3 className="font-semibold text-slate-800">Avaliações</h3>
+          <h3 className="font-semibold text-slate-800">Avaliacoes</h3>
           {avaliacoes.length > 0 && (
             <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">
               {avaliacoes.length}
@@ -109,17 +118,16 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
         </div>
         <Button size="sm" variant="secondary" onClick={() => setShowForm(!showForm)}>
           <ClipboardList className="w-3.5 h-3.5" />
-          Nova avaliação
+          Nova avaliacao
         </Button>
       </div>
 
-      {/* Formulário nova avaliação */}
       {showForm && (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4 space-y-3">
-          <p className="text-sm font-medium text-slate-700">Nova avaliação semestral</p>
+          <p className="text-sm font-medium text-slate-700">Nova avaliacao semestral</p>
           <input
             type="text"
-            placeholder="Período avaliado (ex: 1º Semestre/2026)"
+            placeholder="Periodo avaliado (ex: 1 Semestre/2026)"
             value={periodo}
             onChange={e => setPeriodo(e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -135,9 +143,8 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
         </div>
       )}
 
-      {/* Lista de avaliações */}
       {avaliacoes.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-6">Nenhuma avaliação registrada.</p>
+        <p className="text-sm text-slate-400 text-center py-6">Nenhuma avaliacao registrada.</p>
       ) : (
         <div className="space-y-3">
           {avaliacoes.map(av => (
@@ -147,9 +154,9 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
                   <p className="text-sm font-medium text-slate-800">{av.periodoAvaliado}</p>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {av.preenchidoEm ? (
-                      <span className="text-green-600 font-medium">✓ Preenchida pelo supervisor</span>
+                      <span className="text-green-600 font-medium">Preenchida pelo supervisor</span>
                     ) : (
-                      <span className="text-amber-600">⏳ Aguardando supervisor</span>
+                      <span className="text-amber-600">Aguardando supervisor</span>
                     )}
                   </p>
                 </div>
@@ -158,6 +165,14 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
                     <span className={`text-sm font-bold ${corNota(av.notaFinal)}`}>
                       {av.notaFinal.toFixed(1)}
                     </span>
+                  )}
+                  {av.preenchidoEm && (
+                    <GerarPdfButton
+                      avaliacao={{
+                        ...av,
+                        estagiario,
+                      }}
+                    />
                   )}
                   {!av.preenchidoEm && (
                     <button
@@ -183,7 +198,6 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
                 </div>
               </div>
 
-              {/* Link para copiar */}
               {!av.preenchidoEm && (
                 <div className="px-4 py-2 bg-amber-50 border-t border-amber-100 flex items-center gap-2">
                   <ExternalLink className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -199,7 +213,6 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
                 </div>
               )}
 
-              {/* Detalhes da avaliação */}
               {expandido === av.id && av.preenchidoEm && (
                 <div className="px-4 py-3 border-t border-slate-100">
                   <div className="grid grid-cols-2 gap-2 mb-3">
@@ -207,7 +220,7 @@ export function AvaliacoesSection({ estagiarioId, avaliacoes }: AvaliacoesSectio
                       <div key={ind.key} className="flex items-center justify-between text-xs">
                         <span className="text-slate-500">{ind.label}</span>
                         <span className={`px-2 py-0.5 rounded-full font-medium ${corConceito((av as any)[ind.key])}`}>
-                          {(av as any)[ind.key] ?? "—"}
+                          {(av as any)[ind.key] ?? "---"}
                         </span>
                       </div>
                     ))}

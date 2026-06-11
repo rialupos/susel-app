@@ -214,7 +214,18 @@ export default async function EstagiarioDetailPage({ params }: PageProps) {
               </section>
             )}
 
-            <AvaliacoesSection estagiarioId={estagiario.id} avaliacoes={avaliacoes} />
+            <AvaliacoesSection
+  estagiarioId={estagiario.id}
+  avaliacoes={avaliacoes}
+  estagiario={{
+    nome: estagiario.nome,
+    curso: estagiario.curso,
+    supervisorNome: estagiario.supervisorNome,
+    supervisorCargo: estagiario.supervisorCargo,
+    unidadeGestora: estagiario.unidadeGestora,
+    dataInicio: estagiario.dataInicio,
+  }}
+/>
           </div>
 
           <div className="space-y-4">
