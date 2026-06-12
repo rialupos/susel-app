@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma";
+const fs = require('fs');
+
+const content = `import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Header } from "@/components/layout/header";
@@ -112,7 +114,7 @@ export default async function DashboardPage() {
               {data.pendentesSupel.map((e) => (
                 <Link
                   key={e.id}
-                  href={`/estagiarios/${e.id}`}
+                  href={\`/estagiarios/\${e.id}\`}
                   className="flex items-center justify-between p-3 bg-white border border-orange-100 rounded-lg hover:border-orange-300 transition"
                 >
                   <div>
@@ -168,3 +170,7 @@ export default async function DashboardPage() {
     </>
   );
 }
+`;
+
+fs.writeFileSync('app/(dashboard)/dashboard/page.tsx', content);
+console.log('OK4');

@@ -1,4 +1,6 @@
-"use client";
+const fs = require('fs');
+
+const content = `"use client";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -21,19 +23,19 @@ interface WizardData {
 interface StepRevisaoProps { data: WizardData; onBack: () => void; }
 
 function gerarEmailCide(data: WizardData): string {
-  return `Assunto: Contratacao de Estagiario - ${data.vagaCodigo} / ${secretariaLabel(data.secretaria)}
+  return \`Assunto: Contratacao de Estagiario - \${data.vagaCodigo} / \${secretariaLabel(data.secretaria)}
 
 Prezados,
 
-Solicitamos a contratacao do(a) estudante ${data.nome} com a data prevista para inicio no dia ${formatDate(data.dataInicio)}.
-e-mail do(a) supervisor(a): ${data.supervisorEmail ?? ""}
+Solicitamos a contratacao do(a) estudante \${data.nome} com a data prevista para inicio no dia \${formatDate(data.dataInicio)}.
+e-mail do(a) supervisor(a): \${data.supervisorEmail ?? ""}
 
 Segue em anexo o curriculo e o formulario da solicitacao.
 
 Atenciosamente,
 Supervisao de Selecao e Gestao de Estagios - SUSEL
 Secretaria de Gestao de Pessoas - SEGEP
-Tribunal de Contas do Distrito Federal - TCDF`;
+Tribunal de Contas do Distrito Federal - TCDF\`;
 }
 
 function ResumoItem({ label, value }: { label: string; value?: string | null }) {
@@ -60,7 +62,7 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
   async function handleSalvar() {
     setLoading(true);
     try {
-      const result = await criarEstagiario({ ...data, cpf: data.cpf.replace(/\D/g, "") });
+      const result = await criarEstagiario({ ...data, cpf: data.cpf.replace(/\\D/g, "") });
       setEstagiarioId(result.id);
       toast.success("Estagiario cadastrado!");
     } catch (e: any) {
@@ -74,7 +76,7 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
     try {
       await enviarParaCide(estagiarioId);
       toast.success("Contratacao enviada ao Agente Integrador!");
-      router.push(`/estagiarios/${estagiarioId}`);
+      router.push(\`/estagiarios/\${estagiarioId}\`);
     } catch (e) {
       toast.error("Erro ao atualizar status.");
       setEnviando(false);
@@ -103,7 +105,7 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
         <ResumoItem label="Instituicao" value={data.instituicaoEnsino} />
         <ResumoItem label="Horario" value={data.horario} />
         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Contrato</p>
-        <ResumoItem label="Vaga" value={`${data.vagaCodigo} - ${secretariaLabel(data.secretaria)}`} />
+        <ResumoItem label="Vaga" value={\`\${data.vagaCodigo} - \${secretariaLabel(data.secretaria)}\`} />
         <ResumoItem label="Tipo de vaga" value={data.tipoVaga === "NOVA" ? "Nova" : "Substituicao"} />
         <ResumoItem label="Inicio" value={formatDate(data.dataInicio)} />
         <ResumoItem label="Fim" value={formatDate(data.dataFim)} />
@@ -159,7 +161,7 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
           )}
 
           <div className="flex justify-between">
-            <Button variant="secondary" onClick={() => router.push(`/estagiarios/${estagiarioId}`)}>Ver cadastro</Button>
+            <Button variant="secondary" onClick={() => router.push(\`/estagiarios/\${estagiarioId}\`)}>Ver cadastro</Button>
             {isSusel && (
               <Button onClick={handleEnviarCide} disabled={enviando}>
                 {enviando ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</> : <><CheckCircle className="w-4 h-4" /> Contratacao enviada ao Agente Integrador</>}
@@ -170,4 +172,7 @@ export function StepRevisao({ data, onBack }: StepRevisaoProps) {
       )}
     </div>
   );
-}
+}`;
+
+fs.writeFileSync('components/modules/wizard/step-revisao.tsx', content);
+console.log('OK');

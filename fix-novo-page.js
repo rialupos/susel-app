@@ -1,4 +1,6 @@
-import Link from "next/link";
+const fs = require('fs');
+
+const content = `import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { WizardContainer } from "@/components/modules/wizard/wizard-container";
 import { buscarVagaDisponivel } from "@/actions/vagas";
@@ -51,3 +53,7 @@ export default async function NovaContratacaoPage({ searchParams }: PageProps) {
     </>
   );
 }
+`;
+
+fs.writeFileSync('app/(dashboard)/estagiarios/novo/page.tsx', content);
+console.log('OK4');

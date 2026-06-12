@@ -237,6 +237,9 @@ export function TalentosClient({ talentos, areas }: TalentosClientProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={() => router.push(`/estagiarios/novo?nome=${encodeURIComponent(t.nome)}&instituicao=${encodeURIComponent(t.instituicaoEnsino)}&curso=${encodeURIComponent(t.area)}`)}>
+                    Contratar
+                  </Button>
                   {t.curriculoNome && (
                     <Button size="sm" variant="secondary" onClick={() => abrirPdf(t.id)}>
                       <FileText className="w-3.5 h-3.5" />

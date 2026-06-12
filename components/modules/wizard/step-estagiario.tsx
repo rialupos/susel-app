@@ -1,10 +1,19 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FormField, inputClass, selectClass } from "@/components/ui/form-field";
 import { Button } from "@/components/ui/button";
+
+const AREAS = [
+  "Administracao", "Arquitetura e Urbanismo", "Arquivologia", "Biblioteconomia",
+  "Contabilidade", "Direito", "Economia", "Engenharia", "Ensino Medio",
+  "Estatistica", "Historia", "Jornalismo e Comunicacao", "Letras", "Pedagogia",
+  "Politicas Publicas", "Pos-Graduacao", "Relacoes Internacionais", "Saude",
+  "Tecnologo", "TI",
+];
 
 const schema = z.object({
   nome: z.string().min(3, "Nome deve ter ao menos 3 caracteres"),
@@ -37,12 +46,20 @@ interface StepEstagiarioProps {
 }
 
 export function StepEstagiario({ defaultValues, secretaria, onNext, onBack }: StepEstagiarioProps) {
+  const searchParams = useSearchParams();
+  const nomeParam = searchParams.get("nome") ?? "";
+  const instituicaoParam = searchParams.get("instituicao") ?? "";
+  const cursoParam = searchParams.get("curso") ?? "";
+
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       nivel: "SUPERIOR",
       tipoVaga: "NOVA",
       tipo: secretaria === "ESTAGIDATA" ? "ESTAGIDATA" : secretaria === "PCD" ? "PCD" : "REGULAR",
+      nome: nomeParam || undefined,
+      instituicaoEnsino: instituicaoParam || undefined,
+      curso: cursoParam || undefined,
       ...defaultValues,
     },
   });
@@ -82,7 +99,10 @@ export function StepEstagiario({ defaultValues, secretaria, onNext, onBack }: St
         </FormField>
 
         <FormField label="Curso" error={errors.curso?.message} required>
-          <input {...register("curso")} className={inputClass} placeholder="Ex: Direito, Administração..." />
+          <select {...register("curso")} className={selectClass}>
+            <option value="">Selecione o curso...</option>
+            {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
         </FormField>
 
         <FormField label="Instituição de Ensino" error={errors.instituicaoEnsino?.message} required className="md:col-span-2">
